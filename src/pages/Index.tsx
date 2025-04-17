@@ -9,13 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/context/AuthContext";
+import LoginPrompt from "@/components/LoginPrompt";
+import LoginModal from "@/components/LoginModal";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentExcuse, setCurrentExcuse] = useState<Excuse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showScreenshot, setShowScreenshot] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { isAuthenticated } = useAuth();
 
   const getRandomExcuse = (categoryId: string) => {
     setIsLoading(true);
@@ -30,6 +35,11 @@ const Index = () => {
   };
 
   const handleCategorySelect = (categoryId: string) => {
+    if (!isAuthenticated) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    
     setSelectedCategory(categoryId);
     getRandomExcuse(categoryId);
   };
@@ -38,6 +48,10 @@ const Index = () => {
     if (selectedCategory) {
       getRandomExcuse(selectedCategory);
     }
+  };
+
+  const handleOpenLoginModal = () => {
+    setIsLoginModalOpen(true);
   };
 
   return (
@@ -49,38 +63,44 @@ const Index = () => {
         </header>
 
         <div className="bg-white/80 backdrop-blur-sm p-4 md:p-6 rounded-xl shadow-xl mb-6 md:mb-8">
-          <SituationSelector 
-            categories={categories} 
-            selectedCategory={selectedCategory} 
-            onSelectCategory={handleCategorySelect}
-          />
-          
-          {selectedCategory && (
-            <div className="flex justify-center mb-4 md:mb-6">
-              <Button 
-                onClick={handleNewExcuse}
-                variant="default"
-                className="bg-indigo-500 hover:bg-indigo-600 text-white transition-colors"
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Get Another Excuse
-              </Button>
-            </div>
-          )}
-          
-          <ExcuseCard excuse={currentExcuse} isLoading={isLoading} />
-          
-          {currentExcuse && (
-            <div className="flex items-center space-x-2 justify-end mt-4">
-              <Switch 
-                id="screenshot-mode" 
-                checked={showScreenshot}
-                onCheckedChange={setShowScreenshot}
+          {!isAuthenticated ? (
+            <LoginPrompt onLoginClick={handleOpenLoginModal} />
+          ) : (
+            <>
+              <SituationSelector 
+                categories={categories} 
+                selectedCategory={selectedCategory} 
+                onSelectCategory={handleCategorySelect}
               />
-              <Label htmlFor="screenshot-mode">
-                {isMobile ? "Show as WhatsApp" : "Show as WhatsApp Screenshot"}
-              </Label>
-            </div>
+              
+              {selectedCategory && (
+                <div className="flex justify-center mb-4 md:mb-6">
+                  <Button 
+                    onClick={handleNewExcuse}
+                    variant="default"
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white transition-colors"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Get Another Excuse
+                  </Button>
+                </div>
+              )}
+              
+              <ExcuseCard excuse={currentExcuse} isLoading={isLoading} />
+              
+              {currentExcuse && (
+                <div className="flex items-center space-x-2 justify-end mt-4">
+                  <Switch 
+                    id="screenshot-mode" 
+                    checked={showScreenshot}
+                    onCheckedChange={setShowScreenshot}
+                  />
+                  <Label htmlFor="screenshot-mode">
+                    {isMobile ? "Show as WhatsApp" : "Show as WhatsApp Screenshot"}
+                  </Label>
+                </div>
+              )}
+            </>
           )}
         </div>
         
@@ -92,6 +112,11 @@ const Index = () => {
           <p>Made with 😅 for getting out of awkward situations</p>
         </footer>
       </div>
+
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+      />
     </div>
   );
 };
