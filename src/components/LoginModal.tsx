@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "@/hooks/use-toast";
-import { LogIn } from "lucide-react";
+import { LogIn, UserPlus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -16,26 +16,33 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, signUp } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
       await login(email, password);
-      toast({
-        title: "Success!",
-        description: "You have successfully logged in",
-      });
       onClose();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log in. Please try again.",
-        variant: "destructive",
-      });
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    try {
+      await signUp(email, password, username);
+      onClose();
+    } catch (error) {
+      console.error("Sign up error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -51,47 +58,102 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+        <Tabs defaultValue="login" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          </TabsList>
           
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <TabsContent value="login" className="mt-4">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-login">Email</Label>
+                <Input
+                  id="email-login"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password-login">Password</Label>
+                <Input
+                  id="password-login"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <span>Logging in...</span>
+                ) : (
+                  <>
+                    <LogIn className="mr-2 h-4 w-4" />
+                    <span>Sign In</span>
+                  </>
+                )}
+              </Button>
+            </form>
+          </TabsContent>
           
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
-              <span>Logging in...</span>
-            ) : (
-              <>
-                <LogIn className="mr-2 h-4 w-4" />
-                <span>Sign In</span>
-              </>
-            )}
-          </Button>
-          
-          <div className="text-center text-sm text-gray-500 mt-4">
-            <p>Note: This is a demo authentication.</p>
-            <p>Any email and password will work.</p>
-          </div>
-        </form>
+          <TabsContent value="signup" className="mt-4">
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username-signup">Username</Label>
+                <Input
+                  id="username-signup"
+                  type="text"
+                  placeholder="johndoe"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email-signup">Email</Label>
+                <Input
+                  id="email-signup"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password-signup">Password</Label>
+                <Input
+                  id="password-signup"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <span>Creating account...</span>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    <span>Create Account</span>
+                  </>
+                )}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
